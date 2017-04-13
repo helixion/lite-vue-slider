@@ -35,7 +35,7 @@ import SideWidget from './SideWidget.vue';
 export default {
 	mounted() {
 		this.initSlides();
-		this.startTimer(this.currentSlideIndex);
+		this.startTimer();
 	},
 
 	destroyed() {
