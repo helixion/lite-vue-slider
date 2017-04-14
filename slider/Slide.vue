@@ -1,5 +1,5 @@
 <template>
-	<div class="slider-image" :data-slide-id="slide.id" :style="{ left: slide.xPos + 'px' }">
+	<div class="slider-image" :style="{ left: slide.xPos + 'px' }">
 		<img :src="slide.img" :alt="slide.body" style="width: 100%; height: 100%;">
         <div class="slider-info">
           <h4>{{slide.title}}</h4>

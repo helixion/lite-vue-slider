@@ -4,7 +4,7 @@
 	    	<div class="slider-overflow" :style="{ width: dimensions.width + 'px', height: dimensions.height + 'px' }">
 	    		<div class="slider-mover" :style="animate">
 	    			<image-slide 
-			           v-for="(slide, index) in slides"
+			           v-for="(slide, index) in newSlides"
 			           :slide="slide"
 			           @mouseenter.native="isPaused = true"
 			           @mouseleave.native="isPaused = false"
@@ -20,7 +20,7 @@
           	</slide-controls>
         </div>
     	<side-widget 
-    		:slides="slides" 
+    		:slides="newSlides" 
     		:currentSlide="currentSlideIndex"
     		@setSlideIndex="setSlide">		
     	</side-widget>
@@ -73,6 +73,7 @@ export default {
 
 	data() {
 		return {
+			newSlides: [],
 			currentSlideIndex: 0,
 			position: 0,
 			timer: null,
@@ -103,17 +104,35 @@ export default {
 		},
 
 	    initSlides() {
-	      const sliderBox = document.querySelector('.slider-box');
-	      const sliderBoxWidth = sliderBox.clientWidth;
-	      const sliderBoxHeight = sliderBox.clientHeight;
+	        const sliderBox = document.querySelector('.slider-box');
+	        const sliderBoxWidth = sliderBox.clientWidth;
+	        const sliderBoxHeight = sliderBox.clientHeight;
 
-	      this.dimensions.width = Number(sliderBoxWidth); 
-	      this.dimensions.height = Number(sliderBoxHeight);
+	        this.dimensions.width = Number(sliderBoxWidth); 
+	        this.dimensions.height = Number(sliderBoxHeight);
 
-	      this.slides.forEach((slide, index) => {
-	        slide.xPos = (this.dimensions.width * index);
-	      });
-	      
+
+	        this.newSlides = this.slides.map((slide, index) => {
+	        	try {
+	        		if (typeof slide === 'object' && slide && !Array.isArray(slide)) {
+	        			if (slide.hasOwnProperty('title') && slide.hasOwnProperty('body')) {
+	        				return {
+					      		...slide,
+					      		xPos: (this.dimensions.width * index),
+					      		progress: 0
+			      			};
+	        			} else {
+	        				throw new Error(`Object at index(${index}) does not have a body and/or title property`);
+	        			}
+		        		
+		        	} else {
+		        		throw new Error(`Type wasn't of type object. index: ${index}`);
+		        	}
+	        	} 
+	        	catch(e) {
+	        		console.error(e);
+	        	}
+	        });
 	    },
 
 	    startTimer() {
@@ -123,7 +142,7 @@ export default {
 	    			const interval = (this.duration / 100);
 
 	    			this.timer = setInterval(() => {
-	    				if (this.slides[this.currentSlideIndex].progress === 100) {
+	    				if (this.newSlides[this.currentSlideIndex].progress === 100) {
 	    					if (this.isLastSlide) {
 	    						this.setSlide(0);
 	    					} else {
@@ -131,7 +150,7 @@ export default {
 	    					}
 	    				} else {
 	    					if (!this.isPaused) {
-	    						this.slides[this.currentSlideIndex].progress++;
+	    						this.newSlides[this.currentSlideIndex].progress++;
 	    					}
 	    				}
 	    			}, interval);
@@ -143,7 +162,7 @@ export default {
 	    	clearInterval(this.timer);
 	    	this.timer = null;
 
-	    	const slide = this.slides.find(slide => slide.progress > 0);
+	    	const slide = this.newSlides.find(slide => slide.progress > 0);
 	    	if (slide) {
 	    		slide.progress = 0;
 	    	}
@@ -174,7 +193,7 @@ export default {
 
 	    setSlide(i) {
 	    	this.currentSlideIndex = i;
-	    	this.position = -this.slides[i].xPos;
+	    	this.position = -this.newSlides[i].xPos;
 	    	if (this.timer) {
 	    		this.restartTimer();
 	    	}
@@ -187,7 +206,7 @@ export default {
   			return this.currentSlideIndex === 0;
   		},
   		isLastSlide() {
-  			const lastSlide = this.slides.length - 1;
+  			const lastSlide = this.newSlides.length - 1;
   			return this.currentSlideIndex === lastSlide;
   		},
   		animate() {
